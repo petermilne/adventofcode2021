@@ -197,9 +197,9 @@ int main(int argc, char* argv[])
 			ib++;
 		}
 		for (int ib = erase_list.size() - 1; ib >= 0; --ib){
-			boards.erase(boards.begin()+ib);
+			boards.erase(boards.begin()+erase_list[ib]);
 		}
-		if (boards.size() == 1){
+		if (boards.size() == 0){
 			break;
 		}
 	}		
