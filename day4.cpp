@@ -15,7 +15,9 @@ class BingoBoard {
 	int numbers[R][C];
 	bool called[R][C];
 public:
-	BingoBoard() {
+	const int board_number;
+
+	BingoBoard(int bn) : board_number(bn) {
 		memset(called, 0, R*C*sizeof(bool));
 	}
 	virtual ~BingoBoard() {
@@ -109,7 +111,7 @@ std::vector<BingoBoard<R,C>*> &BingoBoard<R,C>::factory(std::istream &in)
 
 	while (!in.eof()){
 				
-		BingoBoard<R,C> *bb = new BingoBoard<R,C>;
+		BingoBoard<R,C> *bb = new BingoBoard<R,C>(ib+1);
 		for (int row = 0; row < R; ++row){
 			for (int col = 0; col < C; ++col){
 				in >> bb->numbers[row][col];
@@ -160,25 +162,43 @@ int main(int argc, char* argv[])
 */
 	// Showtime!
 	//
+	BB55* last_board_standing = 0;
+	int score;
+
 	ic = 1;
 	for (int cc : calls){
 		std::cout << "Call:" << ic++ << " " << cc << std::endl;
-		int ib = 1;
+
+		std::vector<int> erase_list;
+		int ib = 0;
 		for (BB55* board: boards){
-/*			
-			std::cout << "playing board " << ib << " number " << cc << std::endl;
-*/			
-			int score = board->play(cc);
+	/*	
+			std::cout << "playing board " << board->board_number << 
+							" number " << cc << std::endl;
+	*/	
+			score = board->play(cc);
 			if (score){
-				std::cout << "BINGO: board " << ib << " score:" << score << std::endl;
+				std::cout << "BINGO: board " << board->board_number 
+						<< " score:" << score << std::endl;
 				board->print();
-				return 0;
+				erase_list.push_back(ib);
+				last_board_standing = board;
+				std::cout << "boards remaining: " << boards.size() <<
+					" erase list " << erase_list.size() << std::endl;
 			}
-/*			
-			board.print();
-*/
-			++ib;
-		}		
+			ib++;
+		}
+		for (int ib : erase_list){
+			boards.erase(boards.begin()+ib);
+		}
+		if (boards.size() == 0){
+			break;
+		}
+	}		
+	if (last_board_standing){
+		std::cout << "Last Board Standing #" << last_board_standing->board_number 
+				<< " score:" << score << std::endl;
+		last_board_standing->print();
 	}
 }
 
