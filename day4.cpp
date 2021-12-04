@@ -47,7 +47,7 @@ public:
 			}
 		}
 		for (int col = 0; col < C; ++col){
-			if (full_row(col)){
+			if (full_col(col)){
 				return true;
 			}
 		}
@@ -88,9 +88,8 @@ public:
 
 	int score(int call) {
 		int total_unmarked = 0;
-
 		for (int row = 0; row < R; ++row){
-			for (int col = 0; col < C; +col){
+			for (int col = 0; col < C; ++col){
 				if (!called[row][col]){
 					total_unmarked += numbers[row][col];
 				}
@@ -171,7 +170,7 @@ int main(int argc, char* argv[])
 */			
 			int score = board->play(cc);
 			if (score){
-				std::cout << "BINGO: board " << ib << "score:" << score << std::endl;
+				std::cout << "BINGO: board " << ib << " score:" << score << std::endl;
 				board->print();
 				return 0;
 			}
