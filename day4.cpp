@@ -14,10 +14,11 @@ template<int R, int C>
 class BingoBoard {
 	int numbers[R][C];
 	bool called[R][C];
+	int the_score;
 public:
 	const int board_number;
 
-	BingoBoard(int bn) : board_number(bn) {
+	BingoBoard(int bn) : the_score(0), board_number(bn) {
 		memset(called, 0, R*C*sizeof(bool));
 	}
 	virtual ~BingoBoard() {
@@ -74,14 +75,17 @@ public:
 			for (int col = 0; col < R; ++col){
 				if (call == numbers[row][col]){
 					called[row][col] = true;
+/*					
 					std::cout << "called [" << row << "][" << col << "] " 
 										<< call << std::endl;
+*/										
 					if (bingo()){
 						return score(call);
 					}
-
+/*
 					std::cout << "play: " << call << std::endl;
 					print();
+*/					
 				}
 			}
 		}
@@ -97,7 +101,10 @@ public:
 				}
 			}
 		}
-		return total_unmarked * call;
+		return the_score = total_unmarked * call;
+	}
+	int score() const {
+		return the_score;
 	}
 
 	static std::vector<BingoBoard<R,C>*> &factory(std::istream& in);
@@ -163,11 +170,12 @@ int main(int argc, char* argv[])
 	// Showtime!
 	//
 	BB55* last_board_standing = 0;
-	int score;
 
 	ic = 1;
 	for (int cc : calls){
+/*		
 		std::cout << "Call:" << ic++ << " " << cc << std::endl;
+*/		
 
 		std::vector<int> erase_list;
 		int ib = 0;
@@ -176,7 +184,7 @@ int main(int argc, char* argv[])
 			std::cout << "playing board " << board->board_number << 
 							" number " << cc << std::endl;
 	*/	
-			score = board->play(cc);
+			int score = board->play(cc);
 			if (score){
 				std::cout << "BINGO: board " << board->board_number 
 						<< " score:" << score << std::endl;
@@ -188,16 +196,16 @@ int main(int argc, char* argv[])
 			}
 			ib++;
 		}
-		for (int ib : erase_list){
+		for (int ib = erase_list.size() - 1; ib >= 0; --ib){
 			boards.erase(boards.begin()+ib);
 		}
-		if (boards.size() == 0){
+		if (boards.size() == 1){
 			break;
 		}
 	}		
 	if (last_board_standing){
 		std::cout << "Last Board Standing #" << last_board_standing->board_number 
-				<< " score:" << score << std::endl;
+				<< " score:" << last_board_standing->score() << std::endl;
 		last_board_standing->print();
 	}
 }
