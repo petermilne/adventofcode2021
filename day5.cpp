@@ -39,7 +39,6 @@ struct Line {
 
 	Line(int x1, int y1, int x2, int y2) : p1(x1, y1), p2(x2, y2) {
 		snprintf(str, 128, "%3d,%3d -> %3d,%3d", p1.x, p1.y, p2.x, p2.y);
-		std::cout << "new Line " << toString() << std::endl;
 	}
 
 	bool isHorizontal() const {
@@ -61,12 +60,9 @@ int get_data(std::istream& is, VL* lines)
 	std::string current;
 	while (std::getline(is, current) && current.length() > 1){
 		int x1, y1, x2, y2;
-		std::cout << "line:"  << current << std::endl;
 		if (sscanf(current.c_str(), "%d,%d -> %d,%d", &x1, &y1, &x2, &y2) == 4){
-			std::cout << "scan good\n";
 			lines->push_back(new Line(x1, y1, x2, y2));
 		}
-		std::cout << "so far so good:" << lines->size() << "\n";
 	}
 	return lines->size();
 }
@@ -77,8 +73,6 @@ int main(int argc, const char** argv)
 {
 	VL* lines = new VL;
 	int nlines = get_data(std::cin, lines);
-
-	std::cout << "get_data returned " << nlines << std::endl;
 
 	int ii = 0;
 	for (Line* l : *lines){
