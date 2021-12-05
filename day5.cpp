@@ -18,6 +18,11 @@
 5,5 -> 8,2
  */
 
+#ifdef SAMPLE
+#define CMAX 10
+#else
+#define CMAX 1000
+#endif
 
 #include <string>
 #include <iostream>
@@ -50,6 +55,19 @@ struct Line {
 	const char* toString() const {
 		return str;
 	}
+
+	int y1() {
+		return std::min(p1.y, p2.y);
+	}
+	int y2() {
+		return std::max(p1.y, p2.y);
+	}
+	int x1() {
+		return std::min(p1.x, p2.x);
+	}
+	int x2() {
+		return std::max(p1.x, p2.x);
+	}
 };
 
 
@@ -68,17 +86,62 @@ int get_data(std::istream& is, VL* lines)
 }
 
 
+template <int R, int C>
+class Canvas {
+public:
+	int points[R][C];
+
+	Canvas() {
+		memset(points, 0, sizeof(R*C));		// may not be necessary ?
+	}
+	void draw(Line* line){
+		if (line->isHorizontal()){
+			for (int x = line->x1(); x <= line->x2(); ++x){
+				points[line->p1.y][x] ++;
+			}
+		}else if (line->isVertical()){
+			for (int y = line->y1(); y <= line->y2(); ++y){
+				points[y][line->p1.x] ++;
+			}
+		}else{
+			printf("SORRY, WORKTODO %s\n", line->toString());
+		}
+	}
+	void print() {
+		for (int y = 0; y < R; ++y){
+			for (int x = 0; x < C; ++x){
+				printf("%c", points[y][x]>9? '*': points[y][x]? points[y][x]+'0': '.');
+			}
+			printf("\n");
+		}
+	}
+};
 
 int main(int argc, const char** argv)
 {
 	VL* lines = new VL;
 	int nlines = get_data(std::cin, lines);
 
+	static Canvas<CMAX,CMAX> canvas; 			// use the heap, avoid blowing the stack
+
 	int ii = 0;
 	for (Line* l : *lines){
 		printf("[%3d] %s %s\n", ii++, l->toString(),
 				l->isHorizontal()? "HORIZ": l->isVertical()? "VERT": "SLOPE");
+		canvas.draw(l);
 	}
+#ifdef SAMPLE
+	canvas.print();
+#endif
+	int total_gt_1 = 0;
+	for (int r = 0; r < CMAX; ++r){
+		for (int c = 0; c < CMAX; ++c){
+			if (canvas.points[r][c] > 1){
+				total_gt_1 ++;
+			}
+		}
+	}
+	std::cout << "total points gt1 " << total_gt_1 << std::endl;
 }
 
 
