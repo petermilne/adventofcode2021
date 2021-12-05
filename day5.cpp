@@ -18,6 +18,8 @@
 5,5 -> 8,2
  */
 
+// uncomment this line to run SAMPLE
+//#define SAMPLE 1
 #ifdef SAMPLE
 #define CMAX 10
 #else
@@ -46,28 +48,33 @@ struct Line {
 		snprintf(str, 128, "%3d,%3d -> %3d,%3d", p1.x, p1.y, p2.x, p2.y);
 	}
 
+	// this nomenclature is BAD because y1 could pair with x2 ..
+	int y1() const {
+		return std::min(p1.y, p2.y);
+	}
+	int y2() const {
+		return std::max(p1.y, p2.y);
+	}
+	int x1() const {
+		return std::min(p1.x, p2.x);
+	}
+	int x2() const {
+		return std::max(p1.x, p2.x);
+	}
 	bool isHorizontal() const {
 		return p1.y == p2.y;
 	}
 	bool isVertical() const {
 		return p1.x == p2.x;
 	}
+	bool isDiagonal() const {
+		return y2()-y1() == x2()-x1();
+	}
 	const char* toString() const {
 		return str;
 	}
 
-	int y1() {
-		return std::min(p1.y, p2.y);
-	}
-	int y2() {
-		return std::max(p1.y, p2.y);
-	}
-	int x1() {
-		return std::min(p1.x, p2.x);
-	}
-	int x2() {
-		return std::max(p1.x, p2.x);
-	}
+
 };
 
 
@@ -103,6 +110,13 @@ public:
 			for (int y = line->y1(); y <= line->y2(); ++y){
 				points[y][line->p1.x] ++;
 			}
+		}else if (line->isDiagonal()){
+			int dx = line->p2.x - line->p1.x > 0? 1: -1;
+			int dy = line->p2.y - line->p1.y > 0? 1: -1;
+			int steps = line->x2() - line->x1();
+			for (int step = 0; step <= steps; ++step){
+				points[line->p1.y+step*dy][line->p1.x+step*dx] ++;
+			}
 		}else{
 			printf("SORRY, WORKTODO %s\n", line->toString());
 		}
@@ -127,12 +141,13 @@ int main(int argc, const char** argv)
 	int ii = 0;
 	for (Line* l : *lines){
 		printf("[%3d] %s %s\n", ii++, l->toString(),
-				l->isHorizontal()? "HORIZ": l->isVertical()? "VERT": "SLOPE");
+				l->isHorizontal()? "HORIZ": l->isVertical()? "VERT": l->isDiagonal()? "DIAG": "SLOPE");
 		canvas.draw(l);
-	}
 #ifdef SAMPLE
-	canvas.print();
+		canvas.print();
 #endif
+	}
+
 	int total_gt_1 = 0;
 	for (int r = 0; r < CMAX; ++r){
 		for (int c = 0; c < CMAX; ++c){
