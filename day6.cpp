@@ -14,7 +14,7 @@
 class LanternFish {
 
 public:
-	int timer;
+	unsigned char timer;
 	LanternFish(int _timer): timer(_timer)
 	{}
 
@@ -76,10 +76,14 @@ int main(int argc, const char** argv)
 
 	std::cout << "Max Size " << LanternFish::lanternFishes.max_size() << std::endl;
 	std::cout << "Capacity " << LanternFish::lanternFishes.capacity() << std::endl;
-	LanternFish::lanternFishes.reserve(640000);
+	LanternFish::lanternFishes.reserve(0x40000000);
 	int day;
 	for (day = 0; day <= maxdays; ++day){
-		LanternFish::print(day);
+		if (day < 10){
+			LanternFish::print(day);
+		}else{
+			std::cout << "population at day " << day << " :" << LanternFish::lanternFishes.size() << std::endl;
+		}
 		LanternFish::newDay();
 	}
 	std::cout << "Total LanternFish population " << LanternFish::lanternFishes.size() <<
