@@ -1,1 +1,2 @@
-all: day5 day6 day6.2
+all: day5 day6 day6.2 day7.1
+
