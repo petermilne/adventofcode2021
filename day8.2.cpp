@@ -153,14 +153,33 @@ bool reduce(map<string,string>& mapping, string new_key)
 	return false;
 }
 
-void reduce(string& str){
-	sort(str.begin(), str.end());
+void reduce(map<string, vector<string>> mapping)
+{
+	map<string, vector<string>>::iterator it;
+	map<string, vector<string>>::iterator needle;
 
-	for (int ii = 1; ii < str.length(); ++ii){
-		if (str[ii-1] == str[ii]){
-			str.erase(ii);
-			ii = 1;
+	map<string, vector<string>> new_mapping;
+
+	for (needle = it = mapping.begin(); it != mapping.end(); ++it){
+		if (it->first.length() < needle->first.length()){
+			needle = it;
 		}
+	}
+
+	for (it = mapping.begin(); it != mapping.end(); ++it){
+		for (int jj = 0; jj < it->second.size(); ++jj){
+			string rhs = it->second[jj];
+			cout << "rhs: len" <<rhs.length() << " " << rhs << endl;
+			if (it->first.find(needle->first) != std::string::npos ){
+				cout << "find " << it->first << " contains:" << needle->first <<endl;
+				for (string needlestr: needle->second){
+					if (it->second[jj].find(needlestr)){
+						cout << "reducing " << it->first << " contains:" << needle->first << " AND " << it->second[jj] << " contains:" << needlestr << endl;
+					}
+				}
+			}
+		}
+
 	}
 }
 void solve(DataLine &dl)
@@ -185,6 +204,8 @@ void solve(DataLine &dl)
 
 	cout << "mapping so far:" <<endl;
 	print(mapping);
+
+	reduce(mapping);
 
 /*
 	for (int ii = 0; ii < tmp.inputs.size(); ++ii){
