@@ -135,10 +135,24 @@ void analyse_unique(vector<DataLine*>& vv)
 	cout << "number of unique unique:" << unique_outputs <<endl;
 }
 
+struct cmp_first {
+	bool operator()(const string&a, const string&b) const {
+		if (a.length() == b.length()){
+			return a.compare(b) < 0;
+		}else{
+			return a.length() < b.length();
+		}
+		//return a.compare(b) < 0;
+	}
+};
 
-void print(map<string,vector<string>>& mapping)
+
+//typedef map<string, vector<string>, cmp_first> MAPPING;
+typedef map<string, vector<string>, cmp_first> MAPPING;
+
+void print(MAPPING& mapping)
 {
-	map<string, vector<string>>::iterator it;
+	MAPPING::iterator it;
 	int ii = 0;
 	for (it = mapping.begin(); it != mapping.end(); ++it){
 		cout << "from:" << ii++ << " "<< it->first << " =>" ;
@@ -183,78 +197,104 @@ bool contains(const string& str, const string& needle)
 /** return true if str contains every char from needle, individually */
 {
 	for (int ii = 0; ii < needle.length(); ++ii){
-		if (str.find(needle.substr(ii, 1)) == str.length()){
+		if (str.find(needle.substr(ii, 1)) == string::npos){
 			return false;
 		}
 	}
 	return true;
 }
 
-void reduce(map<string, vector<string>>& mapping)
-{
-	map<string, vector<string>>::iterator it;
-	map<string, vector<string>>::iterator needle;
 
+/*
+void sort(MAPPING& M)
+{
+	vector<pair<string, vector<string>>> A;
+
+	for (auto& it: M){
+		A.push_back(it);
+	}
+	M.clear();
+	sort(A.begin(), A.end(), cmp);
+
+	for (auto& it: A){
+		cout << "sorted:" << it.first << "=>" << it.second[0] << endl;
+		M.insert(it);
+		//M[it.first] = it.second;
+	}
+}
+*/
+
+
+void reduce(MAPPING& mapping)
+{
+	MAPPING::iterator it;
+	MAPPING::iterator needle;
+
+	print(mapping);
+
+/*
 	for (needle = it = mapping.begin(); it != mapping.end(); ++it){
 		if (it->first.length() < needle->first.length()){
 			needle = it;
 		}
 	}
+*/
+	for (needle = mapping.begin(); needle != mapping.end(); ++needle){
+		for (it = mapping.begin(); ++it != mapping.end(); it){
+			cout << endl << "reduce() considering " << it->first << " needle:" << needle->first << endl;
+			if (contains(it->first, needle->first)){
+				cout << "	find " << it->first << " contains:" << needle->first <<endl;
+				int removed = 0;
+				int rhs_count = it->second.size();
+				for (int jj = 0; jj < it->second.size(); ++jj){
+					string& rhs = it->second[jj];
+					//cout << "rhs: len" <<rhs.length() << " " << rhs << endl;
 
-	for (it = mapping.begin(); it != mapping.end(); ++it){
-		if (contains(it->first, needle->first)){
-			cout << "find " << it->first << " contains:" << needle->first <<endl;
-			int removed = 0;
-			int rhs_count = it->second.size();
-			for (int jj = 0; jj < it->second.size(); ++jj){
-				string& rhs = it->second[jj];
-				//cout << "rhs: len" <<rhs.length() << " " << rhs << endl;
 
-
-				for (string needlestr: needle->second){
-					if (needlestr.length() < 1){
-						//cout << "short needle" << endl;
-						continue;
-					}
-					if (rhs.compare(needlestr) == 0){
-						cout << "identical " << it->first << ":" << rhs << "==" <<needlestr << endl;
-					}else if (contains(rhs, needlestr)){
-						cout << "	reducing " << it->first << " contains:" << needle->first << " AND " << rhs << " contains:" << needlestr << endl;
-						string_remove(rhs, needlestr);
-						++removed;
-					}else{
-						cout << "	rhs " << rhs << "does NOT contain needle " << needlestr << " REMOVE the whole string" << endl;
-						it->second.erase(it->second.begin()+jj);
-						++removed;
+					for (string needlestr: needle->second){
+						if (needlestr.length() < 1){
+							//cout << "short needle" << endl;
+							continue;
+						}
+						if (rhs.compare(needlestr) == 0){
+							cout << "	identical " << it->first << ":" << rhs << "==" <<needlestr << endl;
+						}else if (contains(rhs, needlestr)){
+							cout << "	reducing " << it->first << " contains:" << needle->first << " AND " << rhs << " contains:" << needlestr << endl;
+							string_remove(rhs, needlestr);
+							++removed;
+						}else{
+							cout << "	rhs " << rhs << " does NOT contain needle " << needlestr << " REMOVE the whole string" << endl;
+							it->second.erase(it->second.begin()+jj);
+							++removed;
+						}
 					}
 				}
-			}
 
-			if (removed == rhs_count){
-				cout << "removed:" << removed << " rhs_count:" << rhs_count << endl;
+				if (removed == rhs_count){
+					cout << "	removed:" << removed << " rhs_count:" << rhs_count << endl;
 
-				string newkey = it->first;
-				cout << "	compare lhs oldkey:" << it->first << " needle->first:" << needle->first << endl;
-				if (newkey.compare(needle->first) == 0){
-					cout << "	trim lhs oldkey:" << it->first << "== newkey:" << newkey << endl;
-				}else{
-					//debug = true;
-					string_remove(newkey, needle->first);
-					//debug = false;
-					cout << "	trim lhs oldkey:" << it->first << " newkey:" << newkey << endl;
-					mapping[newkey] = it->second;
-					mapping.erase(it);
-					return;
+					string newkey = it->first;
+					cout << "	compare lhs oldkey:" << it->first << " needle->first:" << needle->first << endl;
+					if (newkey.compare(needle->first) == 0){
+						cout << "	trim lhs oldkey:" << it->first << "== newkey:" << newkey << endl;
+					}else{
+						//debug = true;
+						string_remove(newkey, needle->first);
+						//debug = false;
+						cout << "	trim lhs oldkey:" << it->first << " newkey:" << newkey << endl;
+						mapping[newkey] = it->second;
+						mapping.erase(it);
+						return;
+					}
 				}
 			}
 		}
-
 	}
 }
 void solve(DataLine &dl, int maxreduce)
 {
 
-	map<string, vector<string>> mapping;
+	MAPPING mapping;
 
 	DataLine tmp = dl;
 	cout << "solve: input " <<endl;
@@ -267,17 +307,16 @@ void solve(DataLine &dl, int maxreduce)
 		for (int jj = 0; jj < ito.length(); ++jj){
 			to.push_back(SEVEN_SEG[ito[jj]-'0']);
 		}
-
+		cout << "mapping[" << from << "]" << to[0] << endl;
 		mapping[from] = to;
 	}
 
-	for (int ii = 0; ii < maxreduce; ++ii){
-		cout << "from:mapping so far:" << ii <<endl;
-		print(mapping);
-
+	cout << "from:mapping so far:" << 0 <<endl;
+			print(mapping);
+	for (int ii = 0; ii < maxreduce; ){
 		reduce(mapping);
 
-		cout << "from:mapping after reduce:" << ii <<endl;
+		cout << "from:mapping after reduce:" << ++ii <<endl;
 		print(mapping);
 	}
 
