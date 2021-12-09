@@ -16,6 +16,8 @@
 #include <vector>
 #include <map>
 
+#include <assert.h>
+
 using namespace std;
 
 const string SEVEN_SEG[] = {
@@ -137,14 +139,16 @@ void analyse_unique(vector<DataLine*>& vv)
 void print(map<string,vector<string>>& mapping)
 {
 	map<string, vector<string>>::iterator it;
+	int ii = 0;
 	for (it = mapping.begin(); it != mapping.end(); ++it){
-		cout << "from:" << it->first << " =>" ;
+		cout << "from:" << ii++ << " "<< it->first << " =>" ;
 		vector<string> v = it->second;
 		for (int ii = 0; ii < v.size(); ++ii){
 			if (ii) cout << ",";
 			cout << v[ii];
 		}
 		cout << endl;
+
 	}
 }
 
@@ -153,12 +157,24 @@ bool reduce(map<string,string>& mapping, string new_key)
 	return false;
 }
 
+bool debug = true;
+
 void string_remove(string& str, const string& needle)
+// if str contains all the chars in needle, remove them, else leave untouched
 {
+	int nmatch = 0;
 	for (int ii = 0; ii < needle.length(); ++ii){
-		int isrc =  str.find(needle.substr(ii, 1));
-		if (isrc < str.length()){
-			str.erase(isrc);
+		if (str.find(needle.substr(ii, 1)) != string::npos){
+			++nmatch;
+		}
+	}
+	if (nmatch == needle.length()){
+		for (int ii = 0; ii < needle.length(); ++ii){
+			int isrc = str.find(needle.substr(ii, 1));
+			assert (isrc != string::npos);
+//			cout << "string_remove:" << str << " erase " << isrc << endl;
+			str.erase(isrc, 1);
+//			cout << "string_remove:" << str << " erase " << endl;
 		}
 	}
 }
@@ -188,9 +204,12 @@ void reduce(map<string, vector<string>>& mapping)
 	for (it = mapping.begin(); it != mapping.end(); ++it){
 		if (contains(it->first, needle->first)){
 			cout << "find " << it->first << " contains:" << needle->first <<endl;
+			int removed = 0;
+			int rhs_count = it->second.size();
 			for (int jj = 0; jj < it->second.size(); ++jj){
 				string& rhs = it->second[jj];
 				//cout << "rhs: len" <<rhs.length() << " " << rhs << endl;
+
 
 				for (string needlestr: needle->second){
 					if (needlestr.length() < 1){
@@ -202,17 +221,37 @@ void reduce(map<string, vector<string>>& mapping)
 					}else if (contains(rhs, needlestr)){
 						cout << "	reducing " << it->first << " contains:" << needle->first << " AND " << rhs << " contains:" << needlestr << endl;
 						string_remove(rhs, needlestr);
+						++removed;
 					}else{
 						cout << "	rhs " << rhs << "does NOT contain needle " << needlestr << " REMOVE the whole string" << endl;
 						it->second.erase(it->second.begin()+jj);
+						++removed;
 					}
+				}
+			}
+
+			if (removed == rhs_count){
+				cout << "removed:" << removed << " rhs_count:" << rhs_count << endl;
+
+				string newkey = it->first;
+				cout << "	compare lhs oldkey:" << it->first << " needle->first:" << needle->first << endl;
+				if (newkey.compare(needle->first) == 0){
+					cout << "	trim lhs oldkey:" << it->first << "== newkey:" << newkey << endl;
+				}else{
+					//debug = true;
+					string_remove(newkey, needle->first);
+					//debug = false;
+					cout << "	trim lhs oldkey:" << it->first << " newkey:" << newkey << endl;
+					mapping[newkey] = it->second;
+					mapping.erase(it);
+					return;
 				}
 			}
 		}
 
 	}
 }
-void solve(DataLine &dl)
+void solve(DataLine &dl, int maxreduce)
 {
 
 	map<string, vector<string>> mapping;
@@ -232,13 +271,13 @@ void solve(DataLine &dl)
 		mapping[from] = to;
 	}
 
-	for (int ii = 0; ii < 4; ++ii){
-		cout << "mapping so far:" << ii <<endl;
+	for (int ii = 0; ii < maxreduce; ++ii){
+		cout << "from:mapping so far:" << ii <<endl;
 		print(mapping);
 
 		reduce(mapping);
 
-		cout << "mapping after reduce:" << ii <<endl;
+		cout << "from:mapping after reduce:" << ii <<endl;
 		print(mapping);
 	}
 
@@ -258,7 +297,7 @@ void solve(DataLine &dl)
 
 int main(int argc, const char** argv)
 {
-
+	int maxreduce = argc==2? atoi(argv[1]): 1;
 	vector<DataLine*> data;
 
 	for (int ii = 0; ii < 10; ++ii){
@@ -279,6 +318,6 @@ int main(int argc, const char** argv)
 
 
 	for (DataLine* dl: data){
-		solve(*dl);
+		solve(*dl, maxreduce);
 	}
 }
