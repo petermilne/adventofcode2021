@@ -200,6 +200,7 @@ std::vector<Coord> explore_basin(Surface& surface, Bool2D& in_basin, std::vector
 			;
 		}else{
 			in_basin.set(nb.x, nb.y, true);
+			basin.push_back(nb);
 			explore_basin(surface, in_basin, basin, nb);
 		}
 	}
@@ -215,7 +216,7 @@ std::vector<std::vector<Coord>> find_basins(Surface& surface)
 
 	for (int yy = 0; yy < surface.Y; ++yy){
 		for (int xx = 0; xx < surface.X; ++xx){
-			if (in_basin.get(xx, yy) || surface.z({xx, yy})){
+			if (in_basin.get(xx, yy) || surface.z({xx, yy}) == 9){
 				continue;
 			}else{
 				std::vector<Coord> basin;
@@ -239,5 +240,27 @@ int main(int argc, const char** argv)
 	surface.print();
 	std::vector<std::vector<Coord>> basins = find_basins(surface);
 	std::cout << "number of basins:" <<basins.size() << std::endl;
+
+	for (int ii = 0; ii < basins.size(); ++ii){
+		std::cout << "basin:" << ii << " :" << basins[ii] << std::endl;
+	}
+	while(basins.size() > 3){
+		int imin;
+		int min_count = 9999;
+		for (int ii = 0; ii < basins.size(); ++ii){
+			if (basins[ii].size() < min_count){
+				min_count = basins[ii].size();
+				imin = ii;
+			}
+		}
+		basins.erase(basins.begin()+imin);
+	}
+	int top3_product = 1;
+	for (int ii = 0; ii < basins.size(); ++ii){
+		std::cout << "basin:" << ii << " :" << basins[ii] << std::endl;
+		top3_product *= basins[ii].size();
+	}
+	std::cout << "Top3 product:"  << top3_product << std::endl;
+
 }
 
