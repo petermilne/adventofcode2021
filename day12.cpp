@@ -24,8 +24,8 @@ using namespace std;
 
 class Cave;
 
-typedef vector<Cave> VC;
-typedef vector<Cave>::iterator VCI;
+typedef vector<Cave*> VC;
+typedef vector<Cave*>::iterator VCI;
 
 
 vector<string> split (string s, string delimiter) {
@@ -47,6 +47,9 @@ class Cave {
 public:
 	const string name;
 	VC links;
+
+	Cave(const Cave& c): name(c.name), links(c.links)
+	{}
 
 	Cave(string _name): name(_name)
 	{}
@@ -70,7 +73,6 @@ public:
 	{
 		return name < rhs.name;
 	}
-
 };
 
 
@@ -80,15 +82,22 @@ std::ostream& operator<< (std::ostream &out, Cave const& cave) {
     int ii = 0;
     for (auto c: cave.links){
     	if (ii++) out << ",";
-    	out << c.name;
+    	out << c->name << ":" << c->links.size();
     }
     out << "} }";
     return out;
 }
 
+struct CavePointerComp {
+    bool operator()(const Cave* lhs, const Cave* rhs) const {
+    	return lhs->name < rhs->name;
+    }
+};
+
+
 class CaveSystem {
 public:
-	set<Cave> caves;
+	set<Cave*, CavePointerComp> caves;
 
 	CaveSystem(std::istream &in){
 		std::vector<std::string> lines;
@@ -99,24 +108,34 @@ public:
 			}
 			lines.push_back(str);
 			for (auto tok: split(str, "-")){
-				caves.insert(Cave(tok));
+				caves.insert(new Cave(tok));
 			}
 		}
 
 		for (string line: lines){
 			vector<string> tokens = split(line, "-");
-			set<Cave>::iterator it1 = caves.find(Cave(tokens[0]));
-			set<Cave>::iterator it2 = caves.find(Cave(tokens[1]));
+			set<Cave*>::iterator it1 = caves.find(new Cave(tokens[0]));
+			set<Cave*>::iterator it2 = caves.find(new Cave(tokens[1]));
 			//cout << "linking" << *it1 << " and " << *it2 << std::endl;
 			// set fun. we can't modify set elems, so remove, modify, replace ..
-			Cave t1 = *it1;
-			Cave t2 = *it2;
+			Cave* t1 = *it1;
+			Cave* t2 = *it2;
 			caves.erase(it1);
 			caves.erase(it2);
-			t1.links.push_back(t2);
-			t2.links.push_back(t1);
+			t1->links.push_back(t2);
+			t2->links.push_back(t1);
 			caves.insert(t1);
 			caves.insert(t2);
+		}
+
+	}
+
+	void findPaths() {
+		auto it = caves.find(new Cave("start"));
+		Cave* start = *it;
+		cout << *start << endl;
+		for (int ii = 0; ii < start->links.size(); ++ii){
+			cout << *start << "link:" << ii << ": " << *start->links[ii] << endl;
 		}
 	}
 };
@@ -125,6 +144,8 @@ public:
 int main(int argc, const char** argv){
 	CaveSystem caveSystem(std::cin);
 	for (auto c: caveSystem.caves){
-		std::cout << c << endl;
+		std::cout << *c << endl;
 	}
+	cout << "Find Paths" << endl;
+	caveSystem.findPaths();
 }
