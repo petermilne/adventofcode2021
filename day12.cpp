@@ -144,6 +144,15 @@ public:
 
 	}
 
+	void removePath(vector<Cave*>& pp) {
+		for (vector<vector<Cave*>*>::iterator it = paths.begin(); it != paths.end(); ++it){
+			if (**it == pp){
+				cout << "want to erase" << pp << endl; //<< *(*it) << end;
+				paths.erase(it);
+				break;
+			}
+		}
+	}
 	void findPath(vector<Cave*>& pp) {
 		assert(pp.size() > 1);
 		Cave* head = pp.back();
@@ -161,15 +170,7 @@ public:
 						continue;
 					}else{
 						cout << "CYCLE detected TERMINATE" << endl;
-
-						for (vector<vector<Cave*>*>::iterator it = paths.begin(); it != paths.end(); ++it){
-							if (**it == pp){
-								cout << "want to erase" << pp << endl; //<< *(*it) << end;
-								paths.erase(it);
-								break;
-							}
-						}
-
+						removePath(pp);
 						return;
 					}
 				}
@@ -181,7 +182,7 @@ public:
 		cout << "findPath() " << pp << endl;
 		int first = -1;
 		for (int ii = 0; ii < head->links.size(); ++ii){
-			if (head->links[ii] == coming_from){
+			if (head->links[ii] == coming_from && !head->links[ii]->isLarge()){
 				cout << "no going back to " << *coming_from << endl;
 			}else if (first == -1){
 				first = ii;     // do me last
@@ -195,7 +196,8 @@ public:
 			}
 		}
 		if (first == -1){
-			cout << "NO FIRST" << endl;
+			cout << "NO FIRST, delete me" << endl;
+			removePath(pp);
 			return;
 		}
 		pp.push_back(head->links[first]);
