@@ -166,7 +166,7 @@ public:
 					continue;
 				}else if (pp[ii] == pp[jj]){
 					if (pp[ii]->isLarge()){
-						cout << "CYCLE detected LARGE OK" << endl;
+						//cout << "CYCLE detected LARGE OK" << endl;
 						continue;
 					}else{
 						cout << "CYCLE detected TERMINATE" << endl;
@@ -226,6 +226,37 @@ public:
 	}
 };
 
+struct Stats {
+	int npaths;
+	int longest_path;
+	int shortest_path;
+	int paths_with_max_one_small_cave;
+
+	Stats(): npaths(0), longest_path(0), shortest_path(9999),  paths_with_max_one_small_cave(0){
+
+	}
+};
+
+void calcStats(Stats& stats, vector<Cave*>& pv){
+	stats.npaths++;
+	if (pv.size() > stats.longest_path){
+		stats.longest_path = pv.size();
+	}
+	if (pv.size() < stats.shortest_path){
+		stats.shortest_path = pv.size();
+	}
+	int small_count = 0;
+	for (int ii = 0; ii < pv.size(); ++ii){
+		if (pv[ii]->isSmall()){
+			++small_count;
+		}
+	}
+	//cout << "calcStats:" << small_count << endl;
+	if (small_count <= 1){
+		cout << "calcStats: one small:" << pv << endl;
+		stats.paths_with_max_one_small_cave++;
+	}
+}
 
 int main(int argc, const char** argv){
 	CaveSystem caveSystem(std::cin);
@@ -234,7 +265,13 @@ int main(int argc, const char** argv){
 	}
 	cout << "Find Paths" << endl;
 	caveSystem.findPaths();
+
+	cout << endl << endl << "Found " << caveSystem.paths.size() << " Paths" << endl;
+	struct Stats stats;
 	for (auto pv: caveSystem.paths){
+		calcStats(stats, *pv);
 		cout << *pv << endl;
 	}
+	cout << "total paths:" << stats.npaths << " paths_with_max_one_small_cave:"
+				<< stats.paths_with_max_one_small_cave <<endl;
 }
