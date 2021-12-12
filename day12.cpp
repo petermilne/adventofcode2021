@@ -156,8 +156,22 @@ public:
 				if (ii == jj){
 					continue;
 				}else if (pp[ii] == pp[jj]){
-					cout << "CYCLE detected" << endl;
-					return;
+					if (pp[ii]->isLarge()){
+						cout << "CYCLE detected LARGE OK" << endl;
+						continue;
+					}else{
+						cout << "CYCLE detected TERMINATE" << endl;
+
+						for (vector<vector<Cave*>*>::iterator it = paths.begin(); it != paths.end(); ++it){
+							if (**it == pp){
+								cout << "want to erase" << pp << endl; //<< *(*it) << end;
+								paths.erase(it);
+								break;
+							}
+						}
+
+						return;
+					}
 				}
 			}
 		}
@@ -187,7 +201,7 @@ public:
 		pp.push_back(head->links[first]);
 		cout << "push first branch:" << *head->links[0] << endl;
 
-		cout << "recursive call to findPath():" << pp.back() << endl;
+		cout << "recursive call to findPath():" << *pp.back() << endl;
 			// if there's no end ... what now?
 		findPath(pp);
 	}
