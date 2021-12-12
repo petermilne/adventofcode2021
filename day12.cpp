@@ -20,6 +20,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <assert.h>
+
 using namespace std;
 
 class Cave;
@@ -88,6 +90,17 @@ std::ostream& operator<< (std::ostream &out, Cave const& cave) {
     return out;
 }
 
+
+std::ostream& operator<< (std::ostream &out, vector<Cave*> const& path) {
+	out << "path[" << path.size() << "] :";
+	int ii = 0;
+	for (Cave* pc: path){
+		if (ii++) out << "-> ";
+		out << pc->name;
+	};
+    return out;
+}
+
 struct CavePointerComp {
     bool operator()(const Cave* lhs, const Cave* rhs) const {
     	return lhs->name < rhs->name;
@@ -98,6 +111,7 @@ struct CavePointerComp {
 class CaveSystem {
 public:
 	set<Cave*, CavePointerComp> caves;
+	vector<vector<Cave*>*> paths;
 
 	CaveSystem(std::istream &in){
 		std::vector<std::string> lines;
@@ -130,13 +144,69 @@ public:
 
 	}
 
+	void findPath(vector<Cave*>& pp) {
+		assert(pp.size() > 1);
+		Cave* head = pp.back();
+		if (head->isEnd()){
+			cout << "found the END!" << endl;
+			return;
+		}
+		for (int ii = 0; ii < pp.size(); ++ii){
+			for (int jj = 0; jj < pp.size(); ++jj){
+				if (ii == jj){
+					continue;
+				}else if (pp[ii] == pp[jj]){
+					cout << "CYCLE detected" << endl;
+					return;
+				}
+			}
+		}
+		Cave* coming_from = pp[pp.size()-2];
+		cout << endl;
+		cout << "findPath() coming_from:" << *coming_from << " head:" << *head << endl;
+		cout << "findPath() " << pp << endl;
+		int first = -1;
+		for (int ii = 0; ii < head->links.size(); ++ii){
+			if (head->links[ii] == coming_from){
+				cout << "no going back to " << *coming_from << endl;
+			}else if (first == -1){
+				first = ii;     // do me last
+			}else{
+				cout << "[" << ii << "] follow me " << *(head->links[ii]) << endl;
+				vector<Cave*>* pp2 = new vector<Cave*> (pp);
+				pp2->push_back(head->links[ii]);
+				paths.push_back(pp2);
+				cout << "recursive call to findPath():" << *pp2 << endl;
+				findPath(*pp2);
+			}
+		}
+		if (first == -1){
+			cout << "NO FIRST" << endl;
+			return;
+		}
+		pp.push_back(head->links[first]);
+		cout << "push first branch:" << *head->links[0] << endl;
+
+		cout << "recursive call to findPath():" << pp.back() << endl;
+			// if there's no end ... what now?
+		findPath(pp);
+	}
 	void findPaths() {
 		auto it = caves.find(new Cave("start"));
 		Cave* start = *it;
 		cout << *start << endl;
+
 		for (int ii = 0; ii < start->links.size(); ++ii){
+			vector<Cave*>* pp = new vector<Cave*>;
+			pp->push_back(start);
+			pp->push_back(start->links[ii]);
+			paths.push_back(pp);
+			findPath(*pp);
+
 			cout << *start << "link:" << ii << ": " << *start->links[ii] << endl;
 		}
+		vector<Cave*> path;
+		path.push_back(start);
 	}
 };
 
@@ -148,4 +218,7 @@ int main(int argc, const char** argv){
 	}
 	cout << "Find Paths" << endl;
 	caveSystem.findPaths();
+	for (auto pv: caveSystem.paths){
+		cout << *pv << endl;
+	}
 }
