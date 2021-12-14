@@ -44,7 +44,8 @@ def load_data(args):
 def print_array(args):
     print("shape {} dots {}".format(args.a0.shape, np.count_nonzero(args.a0)))
     
-    plt.matshow(args.a0)
+    pa = args.a0    
+    plt.matshow(np.transpose(pa))
     plt.show()
     return
     for yy in range(0, args.YY):
@@ -66,45 +67,32 @@ def make_array(args):
 def make_fold(args, axis, line):
     axis_len = args.a0.shape[0 if axis == 'x' else 1] 
     line1 = axis_len - line
+    print("make_fold({} {} {} {})".format(axis, axis_len, line, line1))
     
     if axis == 'x':
-        print("make_fold({} {} {} {})".format(axis, axis_len, line, line1))
+        a0 = args.a0[:line,:]
+        a1 = args.a0[line:,:]
         
-        if line1 > line:
-            print("gt")     
-            a0 = args.a0[:line,:]
-            a1 = args.a0[line+1:,:]
-        elif line < line1:
-            print("lt")
-            a0 = args.a0[:line-1,:]
-            a1 = args.a0[line:,:]
-        else:
-            print("eq")
-            a0 = args.a0[:line-1,:]
-            a1 = args.a0[line+1:,:]
+        #a1 = np.fliplr(a1)
         a1 = np.flipud(a1)
-        args.a0 = np.logical_or(a0, a1)        
-        args.XX = line
-    else:
-        print("make_fold({} {} {} {})".format(axis, axis_len, line, line1)) 
-        
-        if line1 > line: 
-            print("gt")
-            a0 = args.a0[:,:line]
-            a1 = args.a0[:,line+1:]    
+        if line1 > line:
+            args.a0 = np.logical_or(a0, a1[:-1,:])
         elif line1 < line:
-            print("lt")  
-            a0 = args.a0[:,:line-1]
-            a1 = args.a0[:,line:] 
-        else:
-            print("eq")
-            a0 = args.a0[:,:line-1]
-            a1 = args.a0[:,line+1:]  
+            args.a0 = np.logical_or(a0[:-1,:], a1)
+        else:  
+            args.a0 = np.logical_or(a0, a1)        
+    else:
+        a0 = args.a0[:,:line]
+        a1 = args.a0[:,line:]
          
         #a1 = np.flipud(a1)
         a1 = np.fliplr(a1)
-        args.a0 = np.logical_or(a0, a1)
-        args.YY = line
+        if line1 > line:
+            args.a0 = np.logical_or(a0, a1[:,:-1])
+        elif line1 < line:
+            args.a0 = np.logical_or(a0[:,:-1], a1)
+        else:
+            args.a0 = np.logical_or(a0, a1)
       
 
 def main():
